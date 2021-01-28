@@ -4,7 +4,9 @@ import {
   setData,
   resultField,
   newLotteryField,
-  listField
+  listField,
+  teamMapField,
+  configField
 } from '@/helper/index';
 
 Vue.use(Vuex);
@@ -12,52 +14,49 @@ Vue.use(Vuex);
 export default new Vuex.Store({
   state: {
     config: {
-      name: '年会抽奖',
-      number: 70,
-      firstPrize: 1
+      name: 'Lucky Draw',
+      number: 70
     },
-    result: {
-      firstPrize: []
-    },
+    result: {},
     newLottery: [],
     list: [],
+    teamMap: {},
     photos: []
   },
   mutations: {
     setClearConfig(state) {
       state.config = {
-        name: '年会抽奖',
-        number: 70,
-        firstPrize: 1
+        name: 'Lucky Draw',
+        number: 70
       };
       state.newLottery = [];
     },
     setClearList(state) {
       state.list = [];
     },
+    setClearTeamMap(state) {
+      state.teamMap = {};
+    },
     setClearPhotos(state) {
       state.photos = [];
     },
     setClearResult(state) {
-      state.result = {
-        firstPrize: []
-      };
+      state.result = {};
     },
     setClearStore(state) {
       state.config = {
-        name: '年会抽奖',
-        number: 70,
-        firstPrize: 1
+        name: 'Lucky Draw',
+        number: 70
       };
-      state.result = {
-        firstPrize: []
-      };
+      state.result = {};
       state.newLottery = [];
       state.list = [];
       state.photos = [];
     },
     setConfig(state, config) {
       state.config = config;
+
+      setData(configField, state.config);
     },
     setResult(state, result = {}) {
       state.result = result;
@@ -84,6 +83,10 @@ export default new Vuex.Store({
       state.list = arr;
 
       setData(listField, arr);
+    },
+    setTeamMap(state, teamMap) {
+      state.teamMap = teamMap;
+      setData(teamMapField, teamMap);
     },
     setPhotos(state, photos) {
       state.photos = photos;

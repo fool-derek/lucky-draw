@@ -11,7 +11,7 @@
     </header>
     <div id="main" :class="{ mask: showRes }"></div>
     <div id="tags">
-      <ul v-for="item in datas" :key="item.key">
+      <ul v-for="item in categoryList" :key="item.key">
         <li>
           <a
             href="javascript:void(0);"
@@ -35,6 +35,7 @@
             class="itemres"
             :style="resCardStyle"
             :data-id="item"
+            :data-team="list.find(d => d.key === item).team"
             @click="showRes = false"
             :class="{
               numberOver:
@@ -46,7 +47,7 @@
               <span
                 v-if="!!list.find(d => d.key === item)"
                 :style="{
-                  fontSize: '40px'
+                  fontSize: '28px'
                 }"
               >
                 {{ list.find(d => d.key === item).name }}
@@ -92,21 +93,16 @@
     />
     <Result :visible.sync="showResult"></Result>
 
-    <span class="copy-right">
-      Copyright©zhangyongfeng5350@gmail.com
-    </span>
-
     <audio
       id="audiobg"
       preload="auto"
       controls
-      autoplay
       loop
       @play="playHandler"
       @pause="pauseHandler"
     >
       <source :src="audioSrc" />
-      你的浏览器不支持audio标签
+      你的浏览器不支持audio标奖
     </audio>
   </div>
 </template>
@@ -122,9 +118,11 @@ import {
   resultField,
   newLotteryField,
   conversionCategoryName,
-  listField
+  conversionCategoryTeam,
+  listField,
+  teamMapField
 } from '@/helper/index';
-import { luckydrawHandler } from '@/helper/algorithm';
+import { luckydrawHandler, luckydrawHandlerTeam } from '@/helper/algorithm';
 import Result from '@/components/Result';
 import { database, DB_STORE_NAME } from '@/helper/db';
 export default {
@@ -161,6 +159,9 @@ export default {
     list() {
       return this.$store.state.list;
     },
+    teamMap() {
+      return this.$store.state.teamMap;
+    },
     allresult() {
       let allresult = [];
       for (const key in this.result) {
@@ -171,24 +172,8 @@ export default {
       }
       return allresult;
     },
-    datas() {
-      const { number } = this.config;
-      const nums = number >= 1500 ? 500 : this.config.number;
-      const configNum = number > 1500 ? Math.floor(number / 3) : number;
-      const randomShowNums = luckydrawHandler(configNum, [], nums);
-      const randomShowDatas = randomShowNums.map(item => {
-        const listData = this.list.find(d => d.key === item);
-        const photo = this.photos.find(d => d.id === item);
-        return {
-          key: item * (number > 1500 ? 3 : 1),
-          name: listData ? listData.name : '',
-          photo: photo ? photo.value : ''
-        };
-      });
-      return randomShowDatas;
-    },
     categoryName() {
-      return conversionCategoryName(this.category);
+      return conversionCategoryName(this.form.category);
     },
     photos() {
       return this.$store.state.photos;
@@ -220,6 +205,13 @@ export default {
     if (list) {
       this.$store.commit('setList', list);
     }
+
+    const teamMap = getData(teamMapField);
+    if (teamMap) {
+      this.$store.commit('setTeamMap', teamMap);
+    }
+
+    this.datas();
   },
 
   data() {
@@ -229,7 +221,8 @@ export default {
       showConfig: false,
       showResult: false,
       resArr: [],
-      category: '',
+      form: {},
+      categoryList: [],
       audioPlaying: false,
       audioSrc: bgaudio
     };
@@ -294,7 +287,7 @@ export default {
     createCanvas() {
       const canvas = document.createElement('canvas');
       canvas.width = document.body.offsetWidth;
-      canvas.height = document.body.offsetHeight;
+      canvas.height = document.body.offsetHeight - 20;
       canvas.id = 'rootcanvas';
       this.$el.querySelector('#main').appendChild(canvas);
     },
@@ -316,15 +309,75 @@ export default {
     closeRes() {
       this.showRes = false;
     },
+    datas() {
+      const { number } = this.config;
+      const nums = number >= 1500 ? 500 : this.config.number;
+      const configNum = number > 1500 ? Math.floor(number / 3) : number;
+      const randomShowNums = luckydrawHandler(configNum, [], nums);
+      const randomShowDatas = randomShowNums.map(item => {
+        const listData = this.list.find(d => d.key === item);
+        const photo = this.photos.find(d => d.id === item);
+        return {
+          key: item * (number > 1500 ? 3 : 1),
+          name: listData ? listData.name : '',
+          photo: photo ? photo.value : ''
+        };
+      });
+      this.categoryList = randomShowDatas;
+    },
     toggle(form) {
-      const { speed, config } = this;
+      const { speed } = this;
       if (this.running) {
         this.audioSrc = bgaudio;
         this.loadAudio();
 
+        const { category, mode, qty, remain, allin } = this.form;
+        let num = 1;
+        if (mode === 1 || mode === 5) {
+          num = mode;
+        } else if (mode === 0) {
+          num = remain;
+        } else if (mode === 99) {
+          num = qty;
+        }
+
+        let categoryKeyList = [];
+
+        this.categoryList.forEach(item => {
+          categoryKeyList.push(item.key);
+        });
+
+        const resArr = luckydrawHandlerTeam(
+          categoryKeyList,
+          allin ? [] : this.allresult,
+          num
+        );
+
+        if (resArr && resArr.length > 0) {
+          this.resArr = resArr;
+
+          if (!this.result[category]) {
+            this.$set(this.result, category, []);
+          }
+          const oldRes = this.result[category] || [];
+          const data = Object.assign({}, this.result, {
+            [category]: oldRes.concat(resArr)
+          });
+          this.result = data;
+        } else {
+          this.resArr = null;
+        }
+
         window.TagCanvas.SetSpeed('rootcanvas', speed());
         this.showRes = true;
         this.running = !this.running;
+
+        if (!allin) {
+          this.categoryList = this.categoryList.filter(
+            item => !resArr.includes(item.key)
+          );
+        }
+
         this.$nextTick(() => {
           this.reloadTagCanvas();
         });
@@ -334,35 +387,40 @@ export default {
           return;
         }
 
+        this.form = form;
+
         this.audioSrc = beginaudio;
         this.loadAudio();
 
-        const { number } = config;
-        const { category, mode, qty, remain, allin } = form;
-        let num = 1;
-        if (mode === 1 || mode === 5) {
-          num = mode;
-        } else if (mode === 0) {
-          num = remain;
-        } else if (mode === 99) {
-          num = qty;
-        }
-        const resArr = luckydrawHandler(
-          number,
-          allin ? [] : this.allresult,
-          num
-        );
-        this.resArr = resArr;
+        let categoryTeam = conversionCategoryTeam(this.form.category);
 
-        this.category = category;
-        if (!this.result[category]) {
-          this.$set(this.result, category, []);
+        if (categoryTeam === '*') {
+          this.categoryList = this.list;
+        } else {
+          this.categoryList = this.teamMap[categoryTeam];
         }
-        const oldRes = this.result[category] || [];
-        const data = Object.assign({}, this.result, {
-          [category]: oldRes.concat(resArr)
+
+        if (!this.form.allin) {
+          this.categoryList = this.categoryList.filter(
+            item => !this.allresult.includes(item.key)
+          );
+        }
+        let num = 1;
+        if (this.form.mode === 1 || this.form.mode === 5) {
+          num = this.form.mode;
+        } else if (this.form.mode === 0) {
+          num = this.form.remain;
+        } else if (this.form.mode === 99) {
+          num = this.form.qty;
+        }
+
+        if (this.categoryList.length < num) {
+          return this.$message.error('剩余人数小于抽取人数,请检查奖项人数设置');
+        }
+
+        this.$nextTick(() => {
+          this.reloadTagCanvas();
         });
-        this.result = data;
         window.TagCanvas.SetSpeed('rootcanvas', [5, 1]);
         this.running = !this.running;
       }
@@ -374,7 +432,7 @@ export default {
 #root {
   height: 100%;
   position: relative;
-  background-image: url('./assets/bg1.jpg');
+  background-image: url('./assets/bg.jpg');
   background-size: 100% 100%;
   background-position: center center;
   background-repeat: no-repeat;
@@ -402,7 +460,7 @@ export default {
   }
   .audio {
     position: absolute;
-    top: 100px;
+    top: 80px;
     right: 30px;
     width: 40px;
     height: 40px;
@@ -436,14 +494,19 @@ export default {
 
 #resbox {
   position: absolute;
-  top: 50%;
+  top: 55%;
   left: 50%;
   width: 1280px;
   transform: translateX(-50%) translateY(-50%);
   text-align: center;
   p {
+    color: #fff;
+    font-size: 45px;
+    line-height: 120px;
+  }
+  .warn {
     color: red;
-    font-size: 50px;
+    font-size: 12px;
     line-height: 120px;
   }
   .container {
@@ -453,11 +516,11 @@ export default {
   }
   .itemres {
     background: #fff;
-    width: 160px;
-    height: 160px;
+    width: 280px;
+    height: 155px;
     border-radius: 4px;
     border: 1px solid #ccc;
-    line-height: 160px;
+    line-height: 90px;
     font-weight: bold;
     margin-right: 20px;
     margin-bottom: 20px;
@@ -472,8 +535,8 @@ export default {
       align-items: center;
     }
     &.numberOver::before {
-      content: attr(data-id);
-      width: 30px;
+      content: ' (' attr(data-id) ') ' attr(data-team);
+      width: 215px;
       height: 22px;
       line-height: 22px;
       background-color: #fff;
@@ -481,7 +544,9 @@ export default {
       bottom: 0;
       left: 0;
       font-size: 14px;
-      // border-radius: 50%;
+      text-align: left;
+      border-radius: 50%;
+      padding-left: 5px;
       z-index: 1;
     }
   }

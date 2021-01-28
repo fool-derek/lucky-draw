@@ -19,8 +19,11 @@
       width="400px"
     >
       <el-form ref="form" :model="form" label-width="80px" size="mini">
-        <el-form-item label="抽取奖项">
-          <el-select v-model="form.category" placeholder="请选取本次抽取的奖项">
+        <el-form-item label="抽奖项">
+          <el-select
+            v-model="form.category"
+            placeholder="请选取本次抽取的抽奖项"
+          >
             <el-option
               :label="item.label"
               :value="item.value"
@@ -86,10 +89,10 @@
       <el-input
         type="textarea"
         :rows="10"
-        placeholder="请输入对应的号码和名单(可直接从excel复制)，格式(号码 名字)，导入的名单将代替号码显示在抽奖中。如：
-1 张三
-2 李四
-3 王五
+        placeholder="请输入对应的号码和名单，格式(号码/名字/团队)，导入的名单将代替号码显示在抽奖中。如：
+1/张三/SG
+2/李四/SIG
+3/王五/SEG
 				"
         v-model="listStr"
       ></el-input>
@@ -136,6 +139,7 @@ import {
   removeData,
   configField,
   listField,
+  teamMapField,
   resultField,
   conversionCategoryName
 } from '@/helper/index';
@@ -196,7 +200,8 @@ export default {
         qty: 1,
         allin: false
       },
-      listStr: ''
+      listStr: '',
+      listTeam: {}
     };
   },
   watch: {
@@ -228,6 +233,8 @@ export default {
             case 2:
               removeData(listField);
               this.$store.commit('setClearList');
+              removeData(teamMapField);
+              this.$store.commit('setClearTeamMap');
               break;
             case 3:
               database.clear(DB_STORE_NAME);
@@ -262,22 +269,22 @@ export default {
     },
     onSubmit() {
       if (!this.form.category) {
-        return this.$message.error('请选择本次抽取的奖项');
+        return this.$message.error('请选择本次抽取的抽奖项');
       }
       if (this.remain <= 0) {
-        return this.$message.error('该奖项剩余人数不足');
+        return this.$message.error('该抽奖项剩余人数不足');
       }
       if (this.form.mode === 99) {
         if (this.form.qty <= 0) {
           return this.$message.error('必须输入本次抽取人数');
         }
         if (this.form.qty > this.remain) {
-          return this.$message.error('本次抽奖人数已超过本奖项的剩余人数');
+          return this.$message.error('本次抽奖人数已超过本抽奖项的剩余人数');
         }
       }
       if (this.form.mode === 1 || this.form.mode === 5) {
         if (this.form.mode > this.remain) {
-          return this.$message.error('本次抽奖人数已超过本奖项的剩余人数');
+          return this.$message.error('本次抽奖人数已超过本抽奖项的剩余人数');
         }
       }
       this.showSetwat = false;
@@ -296,24 +303,48 @@ export default {
       const { listStr } = this;
       if (!listStr) {
         this.$message.error('没有数据');
+        return;
       }
       const list = [];
+      const teamMap = {};
       const rows = listStr.split('\n');
       if (rows && rows.length > 0) {
-        rows.forEach(item => {
-          const rowList = item.split(/\t|\s/);
-          if (rowList.length >= 2) {
-            const key = Number(rowList[0].trim());
-            const name = rowList[1].trim();
-            key &&
-              list.push({
-                key,
-                name
-              });
-          }
-        });
+        var BreakException = {};
+        try {
+          rows.forEach(item => {
+            // const rowList = item.split(/\t|\s/);
+            const rowList = item.split(/\\|\//);
+            if (rowList.length >= 2) {
+              const key = Number(rowList[0].trim());
+              const name = rowList[1].trim();
+              const team = rowList[2].trim();
+
+              if (!teamMap.hasOwnProperty(team)) {
+                teamMap[team] = [];
+              }
+
+              if (key && name && team) {
+                let people = {
+                  key,
+                  name,
+                  team
+                };
+                teamMap[team].push(people);
+                list.push(people);
+              } else {
+                throw BreakException;
+              }
+            } else {
+              throw BreakException;
+            }
+          });
+        } catch (error) {
+          this.$message.error('数据格式错误，请检查格式');
+          return;
+        }
       }
       this.$store.commit('setList', list);
+      this.$store.commit('setTeamMap', teamMap);
 
       this.$message({
         message: '保存成功',

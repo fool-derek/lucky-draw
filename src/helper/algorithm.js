@@ -45,3 +45,18 @@ export function luckydrawHandler(total, won = [], num) {
   }
   return res;
 }
+
+export function luckydrawHandlerTeam(teamlist, won = [], num) {
+  const wons = won;
+  const res = [];
+  for (let j = 0; j < num; j++) {
+    const nodraws = teamlist.filter(item => !wons.includes(item));
+    if (nodraws.length == 0) {
+      return [];
+    }
+    const current = nodraws[randomNum(1, nodraws.length) - 1];
+    res.push(current);
+    wons.push(current);
+  }
+  return res;
+}

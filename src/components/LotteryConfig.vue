@@ -2,7 +2,8 @@
   <el-dialog
     :visible="visible"
     :append-to-body="true"
-    width="390px"
+    :close-on-click-modal="false"
+    width="700px"
     @close="$emit('update:visible', false)"
     class="c-LotteryConfig"
   >
@@ -10,7 +11,7 @@
       <span :style="{ fontSize: '16px', marginRight: '20px' }">
         抽奖配置
       </span>
-      <el-button size="mini" @click="addLottery">增加奖项</el-button>
+      <el-button size="mini" @click="addLottery">增加抽奖项</el-button>
       <el-button size="mini" type="primary" @click="onSubmit"
         >保存配置</el-button
       >
@@ -26,16 +27,9 @@
         <el-form-item label="抽奖总人数">
           <el-input
             type="number"
+            v-stopNumberMousewheel
             v-model="form.number"
             :min="1"
-            :step="1"
-          ></el-input>
-        </el-form-item>
-        <el-form-item label="一等奖">
-          <el-input
-            type="number"
-            v-model="form.firstPrize"
-            :min="0"
             :step="1"
           ></el-input>
         </el-form-item>
@@ -49,6 +43,7 @@
             :min="0"
             :step="1"
             v-model="form[newitem.key]"
+            v-stopNumberMousewheel
             @change="
               val => {
                 form[newitem.key] = Number(val);
@@ -62,16 +57,28 @@
     <el-dialog
       :visible.sync="showAddLottery"
       :append-to-body="true"
-      width="300px"
+      :close-on-click-modal="false"
+      width="270px"
       class="dialog-showAddLottery"
     >
-      <div class="add-title" slot="title">增加奖项</div>
+      <div class="add-title" slot="title">增加抽奖项</div>
       <el-form ref="newLottery" :model="newLottery" size="mini">
-        <el-form-item label="奖项名称">
+        <el-form-item label="抽奖项名称">
           <el-input v-model="newLottery.name"></el-input>
         </el-form-item>
+        <el-form-item label="团队名称">
+          <el-select v-model="newLottery.team" placeholder="请选取团队名称">
+            <el-option
+              :label="item"
+              :value="item"
+              v-for="(item, index) in teams"
+              :key="index"
+            ></el-option>
+            <el-option label="All(*)" value="*"></el-option>
+          </el-select>
+        </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="addHandler">增加奖项</el-button>
+          <el-button type="primary" @click="addHandler">增加抽奖项</el-button>
           <el-button @click="showAddLottery = false">取消</el-button>
         </el-form-item>
       </el-form>
@@ -81,6 +88,16 @@
 <script>
 import { setData, configField } from '@/helper/index';
 import { randomNum } from '@/helper/algorithm';
+import Vue from 'vue';
+// Prevent type="number" mouse scroll to change the value
+Vue.directive('stopNumberMousewheel', {
+  inserted: function(el) {
+    const ele = el.tagName === 'INPUT' ? el : el.querySelector('input');
+    ele.addEventListener('mousewheel', () => {
+      ele.blur();
+    });
+  }
+});
 export default {
   name: 'LotteryConfig',
   props: {
@@ -98,12 +115,18 @@ export default {
     },
     storeNewLottery() {
       return this.$store.state.newLottery;
+    },
+    teams() {
+      return Object.keys(this.$store.state.teamMap);
     }
   },
   data() {
     return {
       showAddLottery: false,
-      newLottery: { name: '' }
+      newLottery: {
+        name: '',
+        team: ''
+      }
     };
   },
   methods: {
@@ -136,7 +159,8 @@ export default {
       const field = this.randomField();
       const data = {
         key: field,
-        name: this.newLottery.name
+        name: this.newLottery.name,
+        team: this.newLottery.team
       };
       this.$store.commit('setNewLottery', data);
 
@@ -148,7 +172,7 @@ export default {
 <style lang="scss">
 .c-LotteryConfig {
   .el-dialog__body {
-    height: 340px;
+    height: 600px;
     .container {
       height: 100%;
       overflow-y: auto;
@@ -158,7 +182,11 @@ export default {
 }
 .dialog-showAddLottery {
   .el-dialog {
-    height: 186px;
+    height: 260px;
+  }
+  .el-select {
+    // display: block;
+    width: 100%;
   }
 }
 </style>

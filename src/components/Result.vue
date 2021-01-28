@@ -2,7 +2,7 @@
   <el-dialog
     :visible="visible"
     @close="$emit('update:visible', false)"
-    width="600px"
+    width="1400px"
     class="c-Result"
     :append-to-body="true"
   >
@@ -11,7 +11,7 @@
         抽奖结果
       </span>
       <span :style="{ fontSize: '14px', color: '#999', marginLeft: '10px' }">
-        (点击号码可以删除)
+        (点击人员可以删除)
       </span>
     </div>
     <div
@@ -37,7 +37,14 @@
           :key="j"
           :data-res="data"
         >
-          {{ data }}
+          <span v-if="!!list.find(d => d.key === data)">
+            {{ data }} {{ list.find(d => d.key === data).name }} ({{
+              list.find(d => d.key === data).team
+            }})
+          </span>
+          <span v-else>
+            {{ item }}
+          </span>
         </span>
       </span>
     </div>
@@ -58,6 +65,9 @@ export default {
       set(val) {
         this.$store.commit('setResult', val);
       }
+    },
+    list() {
+      return this.$store.state.list;
     },
     resultList() {
       const list = [];
@@ -112,14 +122,14 @@ export default {
 <style lang="scss">
 .c-Result {
   .el-dialog__body {
-    max-height: 500px;
+    max-height: 787px;
     overflow-y: auto;
   }
   .listrow {
     display: flex;
     line-height: 30px;
     .name {
-      width: 80px;
+      width: 200px;
       font-weight: bold;
     }
     .value {
@@ -131,7 +141,7 @@ export default {
       padding: 0 5px;
       line-height: 30px;
       text-align: center;
-      font-size: 18px;
+      font-size: 15px;
       font-weight: bold;
       border-radius: 4px;
       border: 1px solid #ccc;

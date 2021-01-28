@@ -1,13 +1,15 @@
 {
   "name": "luckydraw",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "license": "MIT",
   "scripts": {
-    "dev": "vue-cli-service serve",
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "vue-dev": "vue-cli-service serve",
+    "vue-serve": "vue-cli-service serve",
+    "vue-build": "vue-cli-service build",
+    "vue-lint": "vue-cli-service lint",
+    "electron-dev": "npm run vue-build && cp ./electron/* ./dist/ && electron ./dist/electron.js",
+    "electron-package": "npm run vue-build && cp ./electron/* ./dist/ && electron-packager ./dist lucky-draw --out ./dist/electron-packages --overwrite --icon=./dist/favicon.ico --all"
   },
   "dependencies": {
     "core-js": "^3.4.3",
@@ -24,10 +26,12 @@
     "@vue/cli-service": "^4.1.0",
     "@vue/eslint-config-prettier": "^5.0.0",
     "babel-eslint": "^10.0.3",
+    "electron": "^11.0.3",
+    "electron-packager": "^15.1.0",
     "eslint": "^5.16.0",
     "eslint-plugin-prettier": "^3.1.1",
     "eslint-plugin-vue": "^5.0.0",
-    "node-sass": "^4.13.0",
+    "node-sass": "^4.14.1",
     "prettier": "^1.19.1",
     "sass-loader": "^8.0.0",
     "vue-template-compiler": "^2.6.10"
