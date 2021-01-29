@@ -13,6 +13,12 @@
 
 ## Releases
 
+支持的操作系统：
+
+1. Windows x64
+2. MacOS x64
+
+下载链接：  
 https://github.com/DerekChenGit/lucky-draw/releases/latest
 
 ## License
