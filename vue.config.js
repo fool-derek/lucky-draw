@@ -7,6 +7,7 @@ module.exports = {
     electronBuilder: {
       builderOptions: {
         appId: 'com.lucky-draw.app',
+        publish: null,
         win: {
           icon: './src/assets/icon.ico'
         },
