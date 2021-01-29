@@ -8,8 +8,7 @@ module.exports = {
       builderOptions: {
         appId: 'com.lucky-draw.app',
         win: {
-          icon: './src/assets/icon.ico',
-          target: 'msi'
+          icon: './src/assets/icon.ico'
         },
         mac: {
           icon: './src/assets/icon.icns',
