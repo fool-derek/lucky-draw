@@ -4,38 +4,14 @@ on:
   push:
     # Sequence of patterns matched against refs/tags
     tags:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
   release:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        node-version: [10.x]
-        os: [macos-latest]
-
+    name: Release
+    if: contains(github.ref, 'tags/v')
+    runs-on: ubuntu-latest
     steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v2
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
-      
-      - name: Install Node.js Dependencies
-        run: npm install
-      
-      - name: Get Artifact Prefix String
-        run: |
-          echo "APP_PREFIX=$(node .github/workflows/getappprefix.js)" | tee -a $GITHUB_ENV
-
-      - name: Electron Build
-        run: npm run electron:build
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -46,14 +22,56 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
-      
+      - name: Create Release URL File
+        run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
+        shell: bash
+      - name: Upload Release URL File for publish
+        uses: actions/upload-artifact@v1
+        with:
+          name: release_url
+          path: release_url.txt
+
+  publish:
+    name: Publish
+    if: contains(github.ref, 'tags/v')
+    needs: [release]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node-version: [10.x]
+        os: [macos-latest, windows-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install Node.js Dependencies
+        run: npm install
+      - name: Electron Build
+        run: npm run electron:build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get Artifact Prefix String
+        id: get_artifact_prefix
+        run: echo "::set-output name=prefix::$(node .github/workflows/getappprefix.js)"
+        shell: bash
+      - name: Download Release URL File from release job
+        uses: actions/download-artifact@v1
+        with:
+          name: release_url
+      - name: Get Release URL File
+        id: get_release_info
+        run: echo "::set-output name=upload_url::$(cat release_url/release_url.txt)"
+        shell: bash
       - name: Upload Release Asset
-        id: upload_release_asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist_electron/${{ env.APP_PREFIX }}.zip
-          asset_name: ${{ env.APP_PREFIX }}-${{ matrix.os }}.zip
+          upload_url: ${{ steps.get_release_info.outputs.upload_url }}
+          asset_path: ./dist_electron/${{ steps.get_artifact_prefix.outputs.prefix }}.zip
+          asset_name: ${{ steps.get_artifact_prefix.outputs.prefix }}-${{ matrix.os }}.zip
           asset_content_type: application/zip

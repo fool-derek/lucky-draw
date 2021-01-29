@@ -11,6 +11,10 @@
 7. 查看抽奖结果: <抽奖结果> -> 鼠标放名字上方可点击<删除>从该抽奖结果中删除
 8. 重置数据: <重置> -> 选择需要重置的数据
 
+## Releases
+
+https://github.com/DerekChenGit/lucky-draw/releases/latest
+
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
