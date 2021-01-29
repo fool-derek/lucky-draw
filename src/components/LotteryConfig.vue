@@ -3,7 +3,7 @@
     :visible="visible"
     :append-to-body="true"
     :close-on-click-modal="false"
-    width="700px"
+    width="500px"
     @close="$emit('update:visible', false)"
     class="c-LotteryConfig"
   >
@@ -172,7 +172,7 @@ export default {
 <style lang="scss">
 .c-LotteryConfig {
   .el-dialog__body {
-    height: 600px;
+    height: 400px;
     .container {
       height: 100%;
       overflow-y: auto;
