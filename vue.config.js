@@ -8,6 +8,7 @@ module.exports = {
       builderOptions: {
         appId: 'com.lucky-draw.app',
         publish: null,
+        artifactName: '${name}-${version}.${ext}',
         win: {
           icon: './src/assets/icon.ico'
         },

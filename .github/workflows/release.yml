@@ -27,6 +27,10 @@ jobs:
       - name: Install Node.js Dependencies
         run: npm install
       
+      - name: Get Artifact Prefix String
+        run: |
+          echo "APP_PREFIX=$(node .github/workflows/getappprefix.js)" | tee -a $GITHUB_ENV
+
       - name: Electron Build
         run: npm run electron:build
         env:
@@ -50,6 +54,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist_electron/*.dmg
-          asset_name: Lucky Draw (${{ matrix.os }})
-          asset_content_type: application/octet-stream
+          asset_path: ./dist_electron/${{ env.APP_PREFIX }}.zip
+          asset_name: ${{ env.APP_PREFIX }}-${{ matrix.os }}.zip
+          asset_content_type: application/zip
