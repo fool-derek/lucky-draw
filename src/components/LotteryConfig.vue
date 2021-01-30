@@ -25,31 +25,46 @@
           <el-input v-model="form.name"></el-input>
         </el-form-item>
         <el-form-item label="抽奖总人数">
-          <el-input
-            type="number"
-            v-stopNumberMousewheel
-            v-model="form.number"
-            :min="1"
-            :step="1"
-          ></el-input>
+          <el-tooltip
+            class="item"
+            effect="dark"
+            content="最小值为0"
+            placement="top"
+          >
+            <el-input
+              type="number"
+              v-stopNumberMousewheel
+              v-model="form.number"
+              :min="1"
+              :step="1"
+            ></el-input>
+          </el-tooltip>
         </el-form-item>
         <el-form-item
           :label="newitem.name"
           v-for="newitem in storeNewLottery"
           :key="newitem.key"
         >
-          <el-input
-            type="number"
-            :min="0"
-            :step="1"
-            v-model="form[newitem.key]"
-            v-stopNumberMousewheel
-            @change="
-              val => {
-                form[newitem.key] = Number(val);
-              }
-            "
-          ></el-input>
+          <el-tooltip
+            class="item"
+            effect="dark"
+            content="最小值为0, '0' 禁用该奖项，不填默认值为'0'"
+            placement="top"
+          >
+            <el-input
+              type="number"
+              :min="0"
+              :step="1"
+              v-model="form[newitem.key]"
+              v-stopNumberMousewheel
+              required
+              @change="
+                val => {
+                  form[newitem.key] = Number(val);
+                }
+              "
+            ></el-input>
+          </el-tooltip>
         </el-form-item>
       </el-form>
     </div>
@@ -89,6 +104,7 @@
 import { setData, configField } from '@/helper/index';
 import { randomNum } from '@/helper/algorithm';
 import Vue from 'vue';
+
 // Prevent type="number" mouse scroll to change the value
 Vue.directive('stopNumberMousewheel', {
   inserted: function(el) {
@@ -157,6 +173,22 @@ export default {
     },
     addHandler() {
       const field = this.randomField();
+      if (
+        this.newLottery.name == undefined ||
+        this.newLottery.name.length == 0
+      ) {
+        this.$message.error('奖项名称未设置');
+        return;
+      }
+
+      if (
+        this.newLottery.team == undefined ||
+        this.newLottery.team.length == 0
+      ) {
+        this.$message.error('请选择团队名称');
+        return;
+      }
+
       const data = {
         key: field,
         name: this.newLottery.name,
