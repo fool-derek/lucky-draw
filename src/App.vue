@@ -102,7 +102,7 @@
       @pause="pauseHandler"
     >
       <source :src="audioSrc" />
-      你的浏览器不支持audio标奖
+      你的浏览器不支持audio标签
     </audio>
   </div>
 </template>

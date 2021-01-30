@@ -11,7 +11,7 @@
       <span :style="{ fontSize: '16px', marginRight: '20px' }">
         抽奖配置
       </span>
-      <el-button size="mini" @click="addLottery">增加抽奖项</el-button>
+      <el-button size="mini" @click="addLottery">增加奖项</el-button>
       <el-button size="mini" type="primary" @click="onSubmit"
         >保存配置</el-button
       >
@@ -61,24 +61,24 @@
       width="270px"
       class="dialog-showAddLottery"
     >
-      <div class="add-title" slot="title">增加抽奖项</div>
+      <div class="add-title" slot="title">增加奖项</div>
       <el-form ref="newLottery" :model="newLottery" size="mini">
-        <el-form-item label="抽奖项名称">
+        <el-form-item label="奖项名称">
           <el-input v-model="newLottery.name"></el-input>
         </el-form-item>
         <el-form-item label="团队名称">
           <el-select v-model="newLottery.team" placeholder="请选取团队名称">
+            <el-option label="All(*)" value="*"></el-option>
             <el-option
               :label="item"
               :value="item"
               v-for="(item, index) in teams"
               :key="index"
             ></el-option>
-            <el-option label="All(*)" value="*"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="addHandler">增加抽奖项</el-button>
+          <el-button type="primary" @click="addHandler">增加奖项</el-button>
           <el-button @click="showAddLottery = false">取消</el-button>
         </el-form-item>
       </el-form>

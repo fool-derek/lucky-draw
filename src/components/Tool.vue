@@ -19,11 +19,8 @@
       width="400px"
     >
       <el-form ref="form" :model="form" label-width="80px" size="mini">
-        <el-form-item label="抽奖项">
-          <el-select
-            v-model="form.category"
-            placeholder="请选取本次抽取的抽奖项"
-          >
+        <el-form-item label="奖项名称">
+          <el-select v-model="form.category" placeholder="请选取本次抽取的奖项">
             <el-option
               :label="item.label"
               :value="item.value"
@@ -48,9 +45,9 @@
 
         <el-form-item label="抽取方式">
           <el-select v-model="form.mode" placeholder="请选取本次抽取方式">
+            <el-option label="一次抽取完" :value="0"></el-option>
             <el-option label="抽1人" :value="1"></el-option>
             <el-option label="抽5人" :value="5"></el-option>
-            <el-option label="一次抽取完" :value="0"></el-option>
             <el-option label="自定义" :value="99"></el-option>
           </el-select>
         </el-form-item>
@@ -196,7 +193,7 @@ export default {
       removeInfo: { type: 0 },
       form: {
         category: '',
-        mode: 1,
+        mode: 0,
         qty: 1,
         allin: false
       },
@@ -269,22 +266,22 @@ export default {
     },
     onSubmit() {
       if (!this.form.category) {
-        return this.$message.error('请选择本次抽取的抽奖项');
+        return this.$message.error('请选择本次抽取的奖项');
       }
       if (this.remain <= 0) {
-        return this.$message.error('该抽奖项剩余人数不足');
+        return this.$message.error('该奖项剩余人数不足');
       }
       if (this.form.mode === 99) {
         if (this.form.qty <= 0) {
           return this.$message.error('必须输入本次抽取人数');
         }
         if (this.form.qty > this.remain) {
-          return this.$message.error('本次抽奖人数已超过本抽奖项的剩余人数');
+          return this.$message.error('本次抽奖人数已超过本奖项的剩余人数');
         }
       }
       if (this.form.mode === 1 || this.form.mode === 5) {
         if (this.form.mode > this.remain) {
-          return this.$message.error('本次抽奖人数已超过本抽奖项的剩余人数');
+          return this.$message.error('本次抽奖人数已超过本奖项的剩余人数');
         }
       }
       this.showSetwat = false;
