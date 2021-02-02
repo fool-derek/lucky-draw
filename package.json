@@ -1,8 +1,13 @@
 {
   "name": "lucky-draw",
   "productName": "Lucky Draw",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "private": true,
+  "author": {
+    "name": "Derek Chen",
+    "email": "ccdaccd@163.com",
+    "url": "https://fool-derek.github.io"
+  },
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
