@@ -5,7 +5,6 @@ on:
     # Sequence of patterns matched against refs/tags
     tags:
       - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
-
 jobs:
   release:
     name: Release
@@ -30,7 +29,6 @@ jobs:
         with:
           name: release_url
           path: release_url.txt
-
   publish:
     name: Publish
     if: contains(github.ref, 'tags/v')
@@ -43,7 +41,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
@@ -75,3 +72,35 @@ jobs:
           asset_path: ./dist_electron/${{ steps.get_artifact_prefix.outputs.prefix }}.zip
           asset_name: ${{ steps.get_artifact_prefix.outputs.prefix }}-${{ matrix.os }}.zip
           asset_content_type: application/zip
+  deploy:
+    name: Deploy
+    if: contains(github.ref, 'tags/v')
+    needs: [release]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [10.x]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install Node.js Dependencies
+        run: npm install
+      - name: Demo Artifacts Build
+        run: npm run build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          REPOSITORY_NAME: fool-derek/fool-derek.github.io
+          BRANCH: main
+          FOLDER: dist
+          CLEAN: false
+          TARGET_FOLDER: demo/lucky-draw
