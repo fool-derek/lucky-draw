@@ -20,7 +20,7 @@
   },
   "main": "background.js",
   "dependencies": {
-    "core-js": "^3.4.3",
+    "core-js": "^3.43.0",
     "element-ui": "^2.13.0",
     "vue": "^2.6.10",
     "vue-router": "^3.1.3",
